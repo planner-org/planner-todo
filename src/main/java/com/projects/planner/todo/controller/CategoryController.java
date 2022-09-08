@@ -6,7 +6,6 @@ import com.projects.planner.todo.service.CategoryService;
 import com.projects.planner.todo.util.Checker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +21,6 @@ import java.util.NoSuchElementException;
 public class CategoryController {
 
     private final CategoryService categoryService;
-
-    @Value("${eureka.instance.instance-id}")
-    private String instanceId;
 
     @PostMapping("/add")
     public ResponseEntity<Category> add(@RequestBody Category category) {
@@ -90,9 +86,7 @@ public class CategoryController {
 
         try {
             Checker.idIsNullOrZero(id);
-            Category category = categoryService.findById(id);
-            category.setTitle(category.getTitle() + " - " + instanceId);
-            return ResponseEntity.ok(category);
+            return ResponseEntity.ok(categoryService.findById(id));
         } catch (IllegalArgumentException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         } catch (NoSuchElementException e) {
