@@ -30,6 +30,7 @@ dependencies {
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     implementation 'com.projects.planner:planner-entity'
+    implementation 'com.projects.planner:planner-utils'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
