@@ -3,7 +3,8 @@ package com.projects.planner.todo.controller;
 import com.projects.planner.entity.Priority;
 import com.projects.planner.todo.dto.PrioritySearchDto;
 import com.projects.planner.todo.service.PriorityService;
-import com.projects.planner.todo.util.Checker;
+import com.projects.planner.utils.Checker;
+import com.projects.planner.utils.webclient.UserWebClientBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -21,18 +22,23 @@ import java.util.NoSuchElementException;
 public class PriorityController {
 
     private final PriorityService priorityService;
+    private final UserWebClientBuilder userWebClientBuilder;
 
     @PostMapping("/add")
     public ResponseEntity<Priority> add(@RequestBody Priority priority) {
 
         try {
-            Checker.idNotNullAndNotZero(priority.getId());
-            Checker.titleNotNullAndNotEmpty(priority.getTitle());
+            Checker.idNotNull(priority.getId());
+            Checker.paramIsNullOrEmpty(priority.getTitle(), "TITLE");
         } catch (IllegalArgumentException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         }
 
-        return ResponseEntity.ok(priorityService.add(priority));
+        if (userWebClientBuilder.userExists(priority.getUserId())) {
+            return ResponseEntity.ok(priorityService.add(priority));
+        }
+
+        return new ResponseEntity("UserId = " + priority.getUserId() + " not founnd!", HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/update")
@@ -40,7 +46,7 @@ public class PriorityController {
 
         try {
             Checker.idIsNullOrZero(priority.getId());
-            Checker.titleNotNullAndNotEmpty(priority.getTitle());
+            Checker.paramIsNullOrEmpty(priority.getTitle(), "TITLE");
         } catch (IllegalArgumentException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         }

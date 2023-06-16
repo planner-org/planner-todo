@@ -4,7 +4,8 @@ package com.projects.planner.todo.controller;
 import com.projects.planner.entity.Task;
 import com.projects.planner.todo.dto.TaskSearchDto;
 import com.projects.planner.todo.service.TaskService;
-import com.projects.planner.todo.util.Checker;
+import com.projects.planner.utils.Checker;
+import com.projects.planner.utils.webclient.UserWebClientBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -26,6 +27,7 @@ import java.util.NoSuchElementException;
 public class TaskController {
 
     private final TaskService taskService;
+    private final UserWebClientBuilder userWebClientBuilder;
 
     @PostMapping("/all")
     public ResponseEntity<List<Task>> getByEmail(@RequestBody Long userId) {
@@ -36,13 +38,17 @@ public class TaskController {
     public ResponseEntity<Task> add(@RequestBody Task task) {
 
         try {
-            Checker.idNotNullAndNotZero(task.getId());
-            Checker.titleNotNullAndNotEmpty(task.getTitle());
+            Checker.idNotNull(task.getId());
+            Checker.paramIsNullOrEmpty(task.getTitle(), "TITLE");
         } catch (IllegalArgumentException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         }
 
-        return ResponseEntity.ok(taskService.add(task));
+        if (userWebClientBuilder.userExists(task.getUserId())) {
+            return ResponseEntity.ok(taskService.add(task));
+        }
+
+        return new ResponseEntity("UserId = " + task.getUserId() + " not founnd!", HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/update")
@@ -50,7 +56,7 @@ public class TaskController {
 
         try {
             Checker.idIsNullOrZero(task.getId());
-            Checker.titleNotNullAndNotEmpty(task.getTitle());
+            Checker.paramIsNullOrEmpty(task.getTitle(), "TITLE");
         } catch (IllegalArgumentException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         }
