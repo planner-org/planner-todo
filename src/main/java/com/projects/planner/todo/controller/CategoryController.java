@@ -2,8 +2,10 @@ package com.projects.planner.todo.controller;
 
 import com.projects.planner.entity.Category;
 import com.projects.planner.todo.dto.CategorySearchDto;
+import com.projects.planner.todo.feign.UserFeignClient;
 import com.projects.planner.todo.service.CategoryService;
-import com.projects.planner.todo.util.Checker;
+import com.projects.planner.utils.Checker;
+import com.projects.planner.utils.webclient.UserWebClientBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -21,18 +23,29 @@ import java.util.NoSuchElementException;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final UserFeignClient userFeignClient;
 
     @PostMapping("/add")
     public ResponseEntity<Category> add(@RequestBody Category category) {
 
         try {
-            Checker.idNotNullAndNotZero(category.getId());
-            Checker.titleNotNullAndNotEmpty(category.getTitle());
+            Checker.idNotNull(category.getId());
+            Checker.paramIsNullOrEmpty(category.getTitle(), "TITLE");
         } catch (IllegalArgumentException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         }
 
-        return ResponseEntity.ok(categoryService.add(category));
+//        With WebClient
+//        if (userWebClientBuilder.userExists(category.getUserId())) {
+//            return ResponseEntity.ok(categoryService.add(category));
+//        }
+
+//        With Feign
+        if (userFeignClient.findUserById(category.getUserId()) != null) {
+            return ResponseEntity.ok(categoryService.add(category));
+        }
+
+        return new ResponseEntity("UserId = " + category.getUserId() + " not founnd!", HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/update")
@@ -40,7 +53,7 @@ public class CategoryController {
 
         try {
             Checker.idIsNullOrZero(category.getId());
-            Checker.titleNotNullAndNotEmpty(category.getTitle());
+            Checker.paramIsNullOrEmpty(category.getTitle(), "TITLE");
         } catch (IllegalArgumentException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         }
