@@ -34,6 +34,11 @@ dependencies {
     implementation 'com.projects.planner:planner-entity:0.0.1-SNAPSHOT'
     implementation 'com.projects.planner:planner-utils:0.0.1-SNAPSHOT'
 
+    // Обязательно с netflix. В том микросервисе, из которого идут вызовы
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-hystrix:+'
+
+    implementation 'org.springframework.cloud:spring-cloud-starter-stream-rabbit'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 

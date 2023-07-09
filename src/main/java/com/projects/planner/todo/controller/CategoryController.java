@@ -1,11 +1,11 @@
 package com.projects.planner.todo.controller;
 
 import com.projects.planner.entity.Category;
+import com.projects.planner.entity.User;
 import com.projects.planner.todo.dto.CategorySearchDto;
 import com.projects.planner.todo.feign.UserFeignClient;
 import com.projects.planner.todo.service.CategoryService;
 import com.projects.planner.utils.Checker;
-import com.projects.planner.utils.webclient.UserWebClientBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -41,11 +41,17 @@ public class CategoryController {
 //        }
 
 //        With Feign
-        if (userFeignClient.findUserById(category.getUserId()) != null) {
+        ResponseEntity<User> response = userFeignClient.findUserById(category.getUserId());
+
+        if (response == null) {
+            return new ResponseEntity("Система пользователей недоступна, попробуйте позже", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (response.getBody() != null) {
             return ResponseEntity.ok(categoryService.add(category));
         }
 
-        return new ResponseEntity("UserId = " + category.getUserId() + " not founnd!", HttpStatus.NOT_FOUND);
+        return new ResponseEntity("UserId = " + category.getUserId() + " not found!", HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/update")

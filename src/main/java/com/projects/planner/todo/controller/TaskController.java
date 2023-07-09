@@ -2,7 +2,9 @@ package com.projects.planner.todo.controller;
 
 
 import com.projects.planner.entity.Task;
+import com.projects.planner.entity.User;
 import com.projects.planner.todo.dto.TaskSearchDto;
+import com.projects.planner.todo.feign.UserFeignClient;
 import com.projects.planner.todo.service.TaskService;
 import com.projects.planner.utils.Checker;
 import com.projects.planner.utils.webclient.UserWebClientBuilder;
@@ -27,7 +29,7 @@ import java.util.NoSuchElementException;
 public class TaskController {
 
     private final TaskService taskService;
-    private final UserWebClientBuilder userWebClientBuilder;
+    private final UserFeignClient userFeignClient;
 
     @PostMapping("/all")
     public ResponseEntity<List<Task>> getByEmail(@RequestBody Long userId) {
@@ -44,11 +46,23 @@ public class TaskController {
             return new ResponseEntity(e.getMessage(), HttpStatus.NOT_ACCEPTABLE);
         }
 
-        if (userWebClientBuilder.userExists(task.getUserId())) {
+//        With WebClient
+//        if (userWebClientBuilder.userExists(task.getUserId())) {
+//            return ResponseEntity.ok(taskService.add(task));
+//        }
+
+//        With Feign
+        ResponseEntity<User> response = userFeignClient.findUserById(task.getUserId());
+
+        if (response == null) {
+            return new ResponseEntity("Система пользователей недоступна, попробуйте позже", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (response.getBody() != null) {
             return ResponseEntity.ok(taskService.add(task));
         }
 
-        return new ResponseEntity("UserId = " + task.getUserId() + " not founnd!", HttpStatus.NOT_FOUND);
+        return new ResponseEntity("UserId = " + task.getUserId() + " not found!", HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/update")
